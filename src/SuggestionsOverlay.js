@@ -4,7 +4,7 @@ import PropTypes from 'prop-types'
 import { defaultStyle } from 'substyle'
 import type { Substyle } from 'substyle'
 
-import utils from './utils'
+import * as utils from './utils'
 
 import type { SuggestionsT, SuggestionT } from './types'
 
