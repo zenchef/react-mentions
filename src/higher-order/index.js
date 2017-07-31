@@ -1,0 +1,1 @@
+export omitProps from './omitProps'

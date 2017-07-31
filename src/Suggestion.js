@@ -1,95 +1,87 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import { defaultStyle } from 'substyle';
-import omit from 'lodash/omit';
-import keys from 'lodash/keys';
+// @flow
+import React from 'react'
+import { defaultStyle } from 'substyle'
+import { compose, withHandlers } from 'recompose'
+import type { Substyle } from 'substyle'
 
-class Suggestion extends Component {
+import type { SuggestionT } from './types'
 
-  static propTypes = {
-    id: PropTypes.string.isRequired,
-    query: PropTypes.string.isRequired,
-    index: PropTypes.number.isRequired,
+import { omitProps } from './higher-order'
 
-    suggestion: PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.shape({
-        id: PropTypes.string.isRequired,
-        display: PropTypes.string
-      }),
-    ]).isRequired,
-    descriptor: PropTypes.object.isRequired,
+import HighlightedDisplay from './HighlightedDisplay'
+import Mention from './Mention'
 
-    focused: PropTypes.bool,
-  };
+type PropsT = {
+  id: string,
+  query: string,
 
-  render() {
-    let rest = omit(this.props, 'style', keys(Suggestion.propTypes));
+  index: number,
 
-    return (
-      <li
-        { ...rest }
-        { ...this.props.style }
-      >
+  suggestion: SuggestionT,
+  descriptor: React$Element<Mention>,
 
-        { this.renderContent() }
-      </li>
-    );
-  }
-
-  renderContent() {
-    let { id, query, descriptor, suggestion, index } = this.props;
-
-    let display = this.getDisplay();
-    let highlightedDisplay = this.renderHighlightedDisplay(display, query);
-
-    if(descriptor.props.renderSuggestion) {
-      return descriptor.props.renderSuggestion(suggestion, query, highlightedDisplay, index);
-    }
-
-    return highlightedDisplay;
-  }
-
-  getDisplay() {
-    let { suggestion } = this.props;
-
-    if(suggestion instanceof String) {
-      return suggestion;
-    }
-
-    let { id, display } = suggestion;
-
-    if(!id || !display) {
-      return id;
-    }
-
-    return display;
-  }
-
-  renderHighlightedDisplay(display) {
-    const { query, style } = this.props;
-
-    let i = display.toLowerCase().indexOf(query.toLowerCase());
-
-    if(i === -1) {
-      return <span { ...style("display") }>{ display }</span>;
-    }
-
-    return (
-      <span { ...style("display") }>
-        { display.substring(0, i) }
-        <b { ...style("highlight") }>
-          { display.substring(i, i+query.length) }
-        </b>
-        { display.substring(i+query.length) }
-      </span>
-    );
-  }
-
+  focused?: boolean,
+  style: Substyle,
 }
 
-const styled = defaultStyle({
-  cursor: "pointer"
-}, (props) => ({ "&focused": props.focused }))
+function Suggestion({
+  id,
+  query,
+  descriptor,
+  suggestion,
+  index,
+  style,
+  ...rest
+}: PropsT) {
+  const display = getDisplay(suggestion)
+  const highlightedDisplay = (
+    <HighlightedDisplay
+      display={display}
+      query={query}
+      style={style('display')}
+    />
+  )
 
-export default styled(Suggestion);
+  return (
+    <li {...rest} {...style}>
+      {descriptor.props.renderSuggestion
+        ? descriptor.props.renderSuggestion(
+            suggestion,
+            query,
+            highlightedDisplay,
+            index
+          )
+        : highlightedDisplay}
+    </li>
+  )
+}
+
+const getDisplay = suggestion => {
+  if (suggestion instanceof String) {
+    return suggestion
+  }
+
+  let { id, display } = suggestion
+
+  if (!id || !display) {
+    return id
+  }
+
+  return display
+}
+
+export default compose(
+  withHandlers({
+    onMouseEnter: ({ onMouseEnter, index }) => () =>
+      onMouseEnter && onMouseEnter(index),
+    onClick: ({ suggestion, descriptor, onSelect }) => () =>
+      onSelect(suggestion, descriptor),
+  }),
+  defaultStyle(
+    {
+      cursor: 'pointer',
+    },
+    ({ focused }) => ({ '&focused': focused })
+  ),
+  omitProps(['focused'])
+)(Suggestion)
