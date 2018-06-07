@@ -1,5 +1,5 @@
 {
-  "name": "react-mentions",
+  "name": "@zenchef/react-mentions",
   "version": "0.0.0-development",
   "description": "React mentions input",
   "main": "lib/index.js",
