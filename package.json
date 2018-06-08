@@ -1,6 +1,6 @@
 {
   "name": "@zenchef/react-mentions",
-  "version": "2.0.2",
+  "version": "2.0.5",
   "description": "React mentions input",
   "main": "lib/index.js",
   "module": "es/index.js",
